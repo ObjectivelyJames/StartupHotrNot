@@ -1,7 +1,9 @@
+import os
+import random
 import uuid
 from uuid import UUID
 import pymongo
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field, EmailStr, AnyHttpUrl
@@ -12,16 +14,28 @@ from pymongo import MongoClient
 
 app = FastAPI(description="Startup HotrNot - by 9Volt Studios")
 
-username = "root"
-password = "rootpassword"
+MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017')
+
+print(MONGODB_URI)
 oauth_schema2 = OAuth2PasswordBearer(tokenUrl="/token")
-client: MongoClient = pymongo.MongoClient('localhost', username='username', password="password")
-# db = client.STARTUP_HOTRNOT
-# users = db.users
-# startups = db.startups
+client: MongoClient = pymongo.MongoClient(MONGODB_URI)
+
+
+# Send a ping to confirm a successful connection
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
+db = client.STARTUP_HOTRNOT
+
+users = db.users
+startups = db.startups
+
 
 class UserProfile(BaseModel):
-    id: UUID = uuid.uuid4()
+    _id: UUID = uuid.uuid4()
     name: str = Field(str, description="Name of the user",
                       examples=["Eton Mushy"],
                       min_length=6, max_length=50
@@ -32,6 +46,10 @@ class UserProfile(BaseModel):
     social_media: List[AnyHttpUrl] = Field([AnyHttpUrl], description="List of social media links")
     resume_link: AnyHttpUrl = Field(AnyHttpUrl, description="Link to resume")
     tags: List[str] = Field([str], description="List of tags")
+
+    @property
+    def id(self):
+        return self._id
 
 
 class UserCreateSchema(BaseModel):
@@ -61,7 +79,7 @@ class UserEntity(UserProfile):
 
 class StartupProfileBase(BaseModel):
     name: str = Field(str, description="Name of the user",
-                      examples=["Eton Mushy"],
+                      examples=["Space Dex"],
                       min_length=6, max_length=50
                       )
     email: EmailStr = Field(EmailStr, description="Email of the user")
@@ -79,6 +97,10 @@ class StartupProfileBase(BaseModel):
 class StartupProfile(StartupProfileBase):
     _id: UUID = uuid.uuid4()  # Unique ID for the startup
 
+    @property
+    def id(self):
+        return self._id
+
 
 class StartupCreateSchema(StartupProfileBase):
     password: str = Field(str, description="Password of the user",
@@ -92,8 +114,8 @@ class StartupEntity(StartupProfile):
                           )
 
 
-users: list[UserEntity] = []
-startups: list[StartupEntity] = []
+# users: list[UserEntity] = []
+# startups: list[StartupEntity] = []
 
 
 async def decode_token(token: str = Depends(oauth_schema2)):
@@ -101,9 +123,17 @@ async def decode_token(token: str = Depends(oauth_schema2)):
 
 
 async def get_current_user(username: str = Depends(decode_token)) -> UserEntity:
-    user = list(filter(lambda x: x.email == username, users))[0]
+    user = users.find_one({"email": username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserEntity(**user)
 
-    return user
+
+async def get_current_startup(email: str = Depends(decode_token)) -> StartupEntity:
+    startup = startups.find_one({"email": email})
+    if startup is None:
+        raise HTTPException(status_code=404, detail="Startup not found")
+    return StartupEntity(**startup)
 
 
 @app.get("/")
@@ -123,8 +153,8 @@ async def hello_world(name: Optional[str]):
 
 @app.post("/token")
 async def get_a_token(login_form: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    return {"access_token": "Hottest_" + login_form.username,
-            "refresh_token": "Not_" + login_form.username, }
+    return {"access_token": str(random.randint(100000, 999999)) + "_HOTATTEST_" + login_form.username,
+            "refresh_token": str(random.randint(100000, 999999)) + "_HOTREFRESH_" + login_form.username, }
 
 
 @app.get("/user/me", response_model=UserProfile)
@@ -133,10 +163,21 @@ async def read_users_me(user: UserEntity = Depends(get_current_user)):
     return user_profile
 
 
+@app.get("/startup/me", response_model=StartupProfile)
+async def read_startup_me(startup: StartupEntity = Depends(get_current_startup)):
+    startup_profile = StartupProfile(**startup.model_dump())
+    return startup_profile
+
+
 @app.get("/user/{user_id}", response_model=UserProfile)
 async def read_user(user_id: UUID):
     try:
-        user: UserEntity = list(filter(lambda x: x._id == user_id, users))[0]
+        user_db = users.find_one({"_id": user_id})
+
+        if user_db is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user = UserProfile(**user_db)
         return user
     except IndexError:
         return {"message": "User not found"}
@@ -145,9 +186,12 @@ async def read_user(user_id: UUID):
 @app.post("/user")
 async def register_user(user: UserCreateSchema):
     user_in = UserEntity(**user.model_dump())
-    users.append(user_in)
+    users.insert_one(user_in)
+    userDB = users.find_one({"_id": user_in.id})
 
-    return UserProfile(**user_in.model_dump())
+    if userDB is None:
+        raise HTTPException(status_code=400, detail="Unable to create user")
+    return UserProfile(**userDB.model_dump())
 
 
 @app.put("/user/profile")
@@ -164,23 +208,31 @@ async def update_user_profile(userProfile: UserProfileUpdateSchema,
 @app.get("/startup/{startup_id}")
 async def read_startup(startup_id: UUID):
     try:
-        startup: StartupEntity = list(filter(lambda x: x._id == startup_id, startups))[0]
-        return startup
+        startup = startups.find_one({"_id": startup_id})
+
+        if startup is None:
+            raise HTTPException(status_code=404, detail="Startup not found")
+
+        return StartupEntity(**startup)
     except IndexError:
         return {"message": "Startup not found"}
 
 
 @app.post("/startup")
 async def register_startup(startup: StartupCreateSchema):
-    startup_in = StartupEntity(**startup.model_dump())
-    startups.append(startup_in)
+    startups.insert_one(startup)
+    startup_db = startups.find_one({"email": startup.email})
 
-    return StartupProfile(**startup_in.model_dump())
+    if startup_db is None:
+        raise HTTPException(status_code=400, detail="Unable to create startup")
+
+    return StartupProfile(**startup_db)
 
 
 @app.put("/startup/profile")
 async def update_startup_profile(startupProfile: StartupProfileBase,
                                  startup: StartupEntity = Depends(get_current_user)):
+
     if startupProfile.logo is not None:
         startup.logo = startupProfile.logo
     if startupProfile.startup_bio is not None:
