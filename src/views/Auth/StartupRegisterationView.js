@@ -9,6 +9,7 @@ import {
     FlatList
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../../services/authService';
 import * as ImagePicker from 'expo-image-picker';
 
 import styles from '../../utils/styles';
@@ -27,6 +28,7 @@ const StartupRegisterationView = () => {
     const [funding, setFunding] = useState('');
     const [industry, setIndustry] = useState('');
     const [location, setLocation] = useState('');
+    const { registerStartup } = useAuth();
 
 
     const handleAddSocialMediaLink = () => {
@@ -82,6 +84,21 @@ const StartupRegisterationView = () => {
             profileBio: startupBio,
             socialMediaLinks,
         });
+
+        registerStartup({
+            "name": name,
+            "email": email,
+            "logo": logo,
+            "startup_bio": startupBio,
+            "social_media": socialMediaLinks,
+            website_link: website,
+            team: team,
+            funding: funding,
+            industry: industry,
+            location: location,
+            tags: [],
+            password: password
+        })
 
         navigation.navigate('Login');
     };
@@ -214,6 +231,7 @@ const StartupRegisterationView = () => {
             <TouchableOpacity style={styles.button} onPress={handleRegister}>
                 <Text style={styles.buttonText}>Register</Text>
             </TouchableOpacity>
+            <View style={{ padding: 20 }}></View>
         </ScrollView >
     );
 };

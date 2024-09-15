@@ -1,6 +1,9 @@
 import { useState, useContext, createContext } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
+
+const API_URL = 'https://3329-2605-8d80-4c1-6697-8922-9d69-d077-1946.ngrok-free.app'
 
 export function AuthProvider({ children }) {
     const auth = useAuthProvider();
@@ -26,18 +29,30 @@ function useAuthProvider() {
         }
     };
 
-    const registerUser = () => {
-        // Implement register logic
-        setUser({ email: 'user@example.com', type: 'user' });
+    const registerUser = (data) => {
+        console.log(data)
+        axios.post(`${API_URL}/user`, data)
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        setUser({ ...data, type: 'user' });
     };
 
-    const registerStartup = () => {
-        // Implement register logic
-        setUser({ email: 'startup@example.com', type: 'startup' });
+    const registerStartup = (data) => {
+        axios.post(`${API_URL}/startup`, data)
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        setUser({ ...data, type: 'startup' });
     };
 
     const logout = () => {
-        // Perform your logout logic here
         setUser(null);
     };
 

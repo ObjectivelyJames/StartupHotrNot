@@ -14,9 +14,11 @@ import * as ImagePicker from 'expo-image-picker';
 import styles from '../../utils/styles';
 import colors from '../../utils/colors';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useAuth } from '../../services/authService';
 
 const UserRegistrationView = () => {
     const navigation = useNavigation();
+    const { registerUser } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
@@ -51,6 +53,18 @@ const UserRegistrationView = () => {
             resumeFile,
             socialMediaLinks,
         });
+
+        registerUser({
+            "name": name,
+            "email": email,
+            "profile_pic": profilePic,
+            "profile_bio": profileBio,
+            "social_media": socialMediaLinks,
+            "resume_link": resumeFile,
+            "password": password,
+            "tags": []
+        })
+
         navigation.navigate('Login');
     };
 
