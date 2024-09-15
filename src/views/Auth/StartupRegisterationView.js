@@ -231,7 +231,7 @@ const StartupRegisterationView = () => {
             <TouchableOpacity style={styles.button} onPress={handleRegister}>
                 <Text style={styles.buttonText}>Register</Text>
             </TouchableOpacity>
-            <View style={{ padding: 20 }}></View>
+            <View style={{ padding: 100 }}></View>
         </ScrollView >
     );
 };
