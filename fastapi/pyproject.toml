@@ -13,6 +13,7 @@ fastapi = {extras = ["all"], version = "^0.114.2"}
 uvicorn = "^0.30.6"
 pydantic = {extras = ["all"], version = "^2.9.1"}
 pymongo = "^4.8.0"
+motor = {extras = ["srv"], version = "^3.5.1"}
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.11.2"
