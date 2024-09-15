@@ -58,6 +58,7 @@ class UserProfile(BaseModel):
     resume_link: str | None = Field(default="", description="Link to resume")
     tags: List[str] = Field(default=[], description="List of tags")
     followed_startups: List[str] | None = Field(default=[], description="List of followed startups")
+    matched_startups: List[str] | None = Field(default=[], description="List of followed startups")
     # @property
     # def id(self):
     #     return self._id
@@ -352,27 +353,42 @@ async def get_users_following_startup(startup_email: str, skip: int = 0, limit: 
 
 
 @app.post("/exlore/startups", description="Get all startups")
-async def get_startups_by_tags(tags: List[str], skip: int = 0, limit: int = 10,
+async def get_startups_by_tags(tags_input: List[str], skip: int = 0, limit: int = 10,
                                user: Dict = Depends(get_current_user)):
-    return startups.find({"tags": {"$in": tags}}).skip(skip).limit(limit)
+    search_tags = tags_input
+
+    if search_tags is None:
+        search_tags = user["tags"]
+    startups_db = list(startups.find({"tags": {"$in": search_tags}}).skip(skip).limit(limit))
+    startups_profile = [StartupProfile(**startup) for startup in startups_db]
+    return startups_profile
+
+
+@app.post("/matched/startups", description="Get all startups")
+async def get_matched_startups(user: Dict = Depends(get_current_user), skip: int = 0, limit: int = 10,):
+    matched_startups = user["matched_startups"]
+    startups_db = list(startups.find({"_id": {"$in": matched_startups}}).skip(skip).limit(limit))
+    startups_profile = [StartupProfile(**startup) for startup in startups_db]
+    return startups_profile
 
 
 @app.post("/follow/startup", description="Follow a startup")
-async def follow_startup(startup_email: str, user: Dict = Depends(get_current_user)):
-    startup = startups.find_one({"email": startup_email})
+async def follow_startup(startup_id: str, user: Dict = Depends(get_current_user)):
+    startup = startups.find_one({"_id": startup_id})
     if startup is None:
         raise HTTPException(status_code=404, detail="Startup not found")
-    users.update_one({"_id": user["_id"]}, {"$addToSet": {"followed_startups": startup_email}})
+    users.update_one({"_id": user["_id"]}, {"$addToSet": {"followed_startups": startup_id}})
     return {"message": "Followed startup"}
 
 
 @app.post("/follow/user", description="Follow a user")
-async def follow_user(user_email: str, startup: Dict = Depends(get_current_startup)):
-    user = users.find_one({"email": user_email})
+async def follow_user(user_id: str, startup: Dict = Depends(get_current_startup)):
+    user = users.find_one({"_id": user_id})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    startups.update_one({"_id": startup["_id"]}, {"$addToSet": {"followed_users": user_email}})
-    return {"message": "Followed user"}
+    startups.update_one({"_id": startup["_id"]}, {"$addToSet": {"followed_users": user_id}})
+    users.update_one({"_id": user["_id"]}, {"$addToSet": {"matched_startups": startup["_id"]}})
+    return {"message": "Matched with the user"}
 
 
 async def insert_tags(tag_inputs: List[str]):
