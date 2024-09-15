@@ -7,6 +7,7 @@ import {
 import SwipableStartupView from '../views/Developer/SwipableStartupView';
 import ProfileView from '../views/Developer/ProfileView';
 import TemplateView from '../views/Components/TemplateView';
+import UserProfileOverview from '../views/Developer/UserProfileOverview';
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,8 @@ export default function AppNavigator({ navigation }) {
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Home" component={SwipableStartupView} />
                 <Stack.Screen name="Profile" component={ProfileView} />
+                <Stack.Screen name="Overview" component={UserProfileOverview} />
+
             </Stack.Navigator>
         </TemplateView>
     );

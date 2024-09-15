@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SafeAreaView, View, Text, Button, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
 import colors from '../../utils/colors';
 // Sample data for projects
 const projectsData = [
@@ -77,6 +78,7 @@ const projectsData = [
     },
     // Add more projects as needed
 ];
+const navigation = useNavigation();
 
 const ProjectCard = ({ project }) => (
     <View style={styles.card}>
@@ -87,7 +89,7 @@ const ProjectCard = ({ project }) => (
                 Roles: {project.roles.join(', ')}
             </Text>
             <Text style={styles.projectDescription}>{project.description}</Text>
-            <TouchableOpacity style={styles.button} onPress={() => console.log("Details")}>
+            <TouchableOpacity style={styles.button} onPress={() => navigator.navigate('Overview')}>
                 <Text style={styles.buttonText}>Go to Details</Text>
             </TouchableOpacity>
         </View>
