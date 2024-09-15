@@ -11,7 +11,7 @@ const UserProfileOverview = ({ user }) => {
     <View style={styles.container}>
       {/* Background Image */}
       <ImageBackground
-        source={{ uri: user.profileImage }}
+        source={{ uri: user.image }}  // Changed to use "image" instead of "profileImage"
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -19,10 +19,12 @@ const UserProfileOverview = ({ user }) => {
         <ScrollView contentContainerStyle={styles.overlayContent}>
           <View style={styles.textContainer}>
             <Text style={styles.name}>{user.name}</Text>
-            <Text style={styles.role}>{user.role}</Text>
-            {/* Hyperlinked Bio with Social Media Links */}
+            {/* Display Roles Next to Each Other */}
+            <Text style={styles.role}>{user.roles.join(', ')}</Text>
+            
+            {/* Display Bio or Description */}
             <Text style={styles.bio}>
-              {user.bio.split(' ').map((word, index) => {
+              {(user.bio || user.description).split(' ').map((word, index) => {
                 if (word.startsWith('[Twitter]')) {
                   return (
                     <Text key={index} style={styles.link} onPress={() => handlePress('https://twitter.com')}>
