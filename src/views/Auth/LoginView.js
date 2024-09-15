@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -8,7 +8,7 @@ import styles from '../../utils/styles';
 
 const LoginView = () => {
     const navigation = useNavigation();
-    const { login } = useAuth(); // Destructure the login function from useAuth
+    const { login } = useAuth();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +35,6 @@ const LoginView = () => {
         <View style={styles.container}>
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to access your account</Text>
-
 
             <TextInput
                 style={styles.input}

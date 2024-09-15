@@ -165,7 +165,7 @@ const StartupRegisterationView = () => {
                 team.map((link, index) => (
                     <View key={index} style={styles.socialMediaContainer}>
                         <TextInput
-                            style={[styles.input, { width: '70%' }]}
+                            style={[styles.input, { width: '60%' }]}
                             placeholder={`Team Member ${index + 1}`}
                             value={link}
                             onChangeText={(text) => handleChangeTeamMember(index, text)}
@@ -190,7 +190,7 @@ const StartupRegisterationView = () => {
                 socialMediaLinks.map((link, index) => (
                     <View key={index} style={styles.socialMediaContainer}>
                         <TextInput
-                            style={[styles.input, { width: '70%' }]}
+                            style={[styles.input, { width: '60%' }]}
                             placeholder={`Social Media Link ${index + 1}`}
                             value={link}
                             onChangeText={(text) => handleChangeSocialMediaLink(index, text)}

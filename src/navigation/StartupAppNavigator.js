@@ -1,11 +1,7 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import {
-    View,
-    SafeAreaView
-} from 'react-native';
-import SwipableStartupView from '../views/Developer/SwipableStartupView';
-import ProfileView from '../views/Developer/ProfileView';
+import StartupHome from '../views/Startup/StartupHome';
+import StartupProfile from '../views/Startup/StartupProfile';
 import TemplateView from '../views/Components/TemplateView';
 
 const Stack = createStackNavigator();
@@ -14,8 +10,8 @@ export default function AppNavigator({ navigation }) {
     return (
         <TemplateView>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="Home" component={SwipableStartupView} />
-                <Stack.Screen name="Profile" component={ProfileView} />
+                <Stack.Screen name="Home" component={StartupHome} />
+                <Stack.Screen name="Profile" component={StartupProfile} />
             </Stack.Navigator>
         </TemplateView>
     );
